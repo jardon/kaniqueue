@@ -8,6 +8,9 @@ import (
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"os/exec"
+	"os"
+	"io"
+	"bytes"
 )
 
 type Job struct {
@@ -28,8 +31,21 @@ func createJob (w http.ResponseWriter, r *http.Request) {
 	var job Job
 	json.Unmarshal(reqBody, &job)
 	Jobs = append(Jobs, job)
+	fmt.Printf("Job recieved: %s", job.Destination)
 	cmd := exec.Command("/kaniko/executor", "--context", job.Context, "--dockerfile", job.Dockerfile, "--destination", job.Destination)
-	go cmd.Run()
+
+	var stdBuffer bytes.Buffer
+	mw := io.MultiWriter(os.Stdout, &stdBuffer)
+
+	cmd.Stdout = mw
+	cmd.Stderr = mw
+
+	// Execute the command
+	if err := cmd.Run(); err != nil {
+		log.Panic(err)
+	}
+
+	log.Println(stdBuffer.String())
 }
 
 func handleRequests() {
