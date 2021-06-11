@@ -32,7 +32,7 @@ func createJob (w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(reqBody, &job)
 	Jobs = append(Jobs, job)
 	fmt.Printf("Job recieved: %s", job.Destination)
-	cmd := exec.Command("/kaniko/executor", "--context", job.Context, "--dockerfile", job.Dockerfile, "--destination", job.Destination)
+	cmd := exec.Command("/kaniko/executor", "--context", "git://" + job.Context, "--dockerfile", job.Dockerfile, "--destination", job.Destination)
 
 	var stdBuffer bytes.Buffer
 	mw := io.MultiWriter(os.Stdout, &stdBuffer)
