@@ -40,10 +40,7 @@ func createJob (w http.ResponseWriter, r *http.Request) {
 	cmd.Stdout = mw
 	cmd.Stderr = mw
 
-	// Execute the command
-	if err := cmd.Run(); err != nil {
-		log.Panic(err)
-	}
+	go cmd.Run()
 
 	log.Println(stdBuffer.String())
 }
