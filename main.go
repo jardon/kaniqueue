@@ -22,7 +22,7 @@ type Job struct {
 var Jobs = []Job{}
 
 func returnAllJobs(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Endpoint Hit: returnAllArticles")
+	fmt.Println("Endpoint Hit: returnAllJobs")
     json.NewEncoder(w).Encode(Jobs)
 }
 
@@ -31,7 +31,10 @@ func createJob (w http.ResponseWriter, r *http.Request) {
 	var job Job
 	json.Unmarshal(reqBody, &job)
 	Jobs = append(Jobs, job)
-	fmt.Printf("Job recieved: %s", job.Destination)
+	fmt.Printf("Job recieved: %s\n", job.Destination)
+}
+
+func runJob(job Job) {
 	cmd := exec.Command("/kaniko/executor", "--context", "git://" + job.Context, "--dockerfile", job.Dockerfile, "--destination", job.Destination)
 
 	var stdBuffer bytes.Buffer
@@ -40,9 +43,23 @@ func createJob (w http.ResponseWriter, r *http.Request) {
 	cmd.Stdout = mw
 	cmd.Stderr = mw
 
-	go cmd.Run()
+	cmd.Run()
+
+	err := os.RemoveAll("/kaniko/buildcontext")
+    if err != nil {
+        log.Fatal(err)
+    }
 
 	log.Println(stdBuffer.String())
+	_, Jobs = Jobs[0], Jobs[1:]
+}
+
+func processRequests() {
+	for {
+		if (len(Jobs) > 0) {
+			runJob(Jobs[0])
+		}
+	}
 }
 
 func handleRequests() {
@@ -54,5 +71,6 @@ func handleRequests() {
 
 func main() {
 	fmt.Println("Starting Kaniqueue server....")
+	go processRequests()
     handleRequests()
 }
