@@ -8,7 +8,7 @@ RUN GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -ldflags '-extldflags "-stati
 FROM gcr.io/kaniko-project/executor
 
 COPY --from=0 /kaniqueue/kaniqueue /kaniko/kaniqueue
-COPY ./config.json /kaniko/.docker/config.json
+# COPY ./config.json /kaniko/.docker/config.json
 ENV HOME /root
 ENV USER root
 ENV PATH $PATH:/usr/local/bin:/kaniko
